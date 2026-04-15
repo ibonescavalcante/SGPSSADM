@@ -278,52 +278,53 @@
 
                 <div class="col-md-6">
                     <h5 class="mb-2"><i class="fas fa-file-alt me-2"></i>Títulos </h5>
+                    <?php if (!empty($extra_json['documentos']['comprovante_experiencia_declaracoes']) && is_array($extra_json['documentos']['comprovante_experiencia_declaracoes'])) : ?>
+                        <?php foreach ($extra_json['documentos']['comprovante_experiencia_declaracoes'] as $file_path) : ?>
+                            <p><a href="/titulos<?php echo htmlspecialchars($file_path); ?>" data-bs-toggle="modal"
+                                    data-bs-target="#pdfModalTitulo" data-tipo-documento="Experiencia">Declaração de
+                                    Experiência</a>
+                                <?php if ($_SESSION['user']['nome'] == 'Administrador') : ?>
+                                    <button class="btn btn-sm btn-outline-primary ms-2"
+                                        onclick="alterarArquivo('<?php echo htmlspecialchars($file_path); ?>')">Alterar</button>
+                                <?php endif; ?>
+                            </p>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
 
-
-                    <?php 
-
-
-                            function renderDocumento($docs, $label, $baseUrl = '/requisitos', $tipo = null)
-                            {
-                                if (empty($docs)) return;
-
-                                // garante que sempre será array
-                                if (!is_array($docs)) {
-                                    $docs = [$docs];
-                                }
-
-                                foreach ($docs as $item) {
-                                    ?>
-                                    <p>
-                                        <a href="<?php echo $baseUrl . htmlspecialchars($item); ?>"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#pdfModalTitulo"
-                                        <?php echo $tipo ? 'data-tipo-documento="'.$tipo.'"' : ''; ?>>
-                                        <?php echo $label; ?>
-                                        </a>
-
-                                        <?php if ($_SESSION['user']['nome'] == 'Administrador') : ?>
-                                            <button class="btn btn-sm btn-outline-primary ms-2"
-                                                onclick="alterarArquivo('<?php echo htmlspecialchars($item); ?>')">
-                                                Alterar
-                                            </button>
-                                        <?php endif; ?>
-                                    </p>
-                                    <?php
-                                }
-                            }
-                    
-                    renderDocumento($extra_json['documentos']['comprovante_experiencia_declaracoes'] ?? null, 'Declaração de Experiência', '/titulos', 'Experiencia');
-                    renderDocumento($extra_json['documentos']['comprovante_escolaridade'] ?? null, 'Comprovante de Escolaridade');
-                    renderDocumento($extra_json['documentos']['certificados'] ?? null, 'Certificados', '/titulos', 'Certificado');
-                    renderDocumento($extra_json['documentos']['POS_GRADUACAO_LATU_SENSU'] ?? null, 'Pós-Graduação Lato Sensu', '/titulos', 'Posgraduacao');
-                    renderDocumento($extra_json['documentos']['CUR_EXTENSAO'] ?? null, 'Curso de Extensão', '/titulos', 'Extensao');
-       
+                    <?php
+                    $comprovante = $extra_json['documentos']['comprovante_escolaridade'] ?? null;
+                    if (is_array($comprovante)) {
+                        foreach ($comprovante as $item) {
+                            echo '<p><a href="/requisitos' . htmlspecialchars($item) . '" 
+                                data-bs-toggle="modal" data-bs-target="#pdfModalTitulo">Comprovante de Escolaridade</a>';
+                            if ($_SESSION['user']['nome'] == 'Administrador') : ?>
+                                <button class="btn btn-sm btn-outline-primary ms-2"
+                                    onclick="alterarArquivo('<?php echo htmlspecialchars($item); ?>')">Alterar</button>
+                            <?php endif;
+                            echo '</p>';
+                        }
+                    } elseif (!empty($comprovante)) {
+                        echo '<p><a href="/requisitos' . htmlspecialchars($comprovante) . '" 
+                                data-bs-toggle="modal" data-bs-target="#pdfModalTitulo">Comprovante de Escolaridade</a>';
+                        if ($_SESSION['user']['nome'] == 'Administrador') : ?>
+                            <button class="btn btn-sm btn-outline-primary ms-2"
+                                onclick="alterarArquivo('<?php echo htmlspecialchars($comprovante); ?>')">Alterar</button>
+                    <?php endif;
+                        echo '</p>';
+                    }
                     ?>
 
-
-
-                 
+                    <?php if (!empty($extra_json['documentos']['certificados']) && is_array($extra_json['documentos']['certificados'])) : ?>
+                        <?php foreach ($extra_json['documentos']['certificados'] as $file_path) : ?>
+                            <p><a href="/titulos<?php echo htmlspecialchars($file_path); ?>" data-bs-toggle="modal"
+                                    data-bs-target="#pdfModalTitulo" data-tipo-documento="Certificado">Certificados</a>
+                                <?php if ($_SESSION['user']['nome'] == 'Administrador') : ?>
+                                    <button class="btn btn-sm btn-outline-primary ms-2"
+                                        onclick="alterarArquivo('<?php echo htmlspecialchars($file_path); ?>')">Alterar</button>
+                                <?php endif; ?>
+                            </p>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
 
 
                 </div>

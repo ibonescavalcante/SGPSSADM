@@ -4,7 +4,7 @@ services:
   # Postgres
   # postgres:
   #   networks:
-  #     - sgpsadm-network
+  #     - network
   #   image: postgres:17
   #   container_name: postgres-container
   #   restart: always
@@ -20,8 +20,8 @@ services:
   # PHP
   php:
     networks:
-      - sgpsadm-network
-    container_name: php-container-adm
+      - network
+    container_name: php
     build:
       context: ./docker/php
       dockerfile: Dockerfile
@@ -35,8 +35,8 @@ services:
   # Nginx
   nginx:
     networks:
-      - sgpsadm-network
-    container_name: nginx-container-adm
+      - network
+    container_name: nginx
     build:
       context: ./docker/nginx
       dockerfile: Dockerfile
@@ -53,5 +53,5 @@ services:
 # postgres_data:
 
 networks:
-  sgpsadm-network:
+  network:
     driver: bridge
