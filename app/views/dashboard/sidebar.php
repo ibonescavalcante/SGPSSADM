@@ -1,5 +1,12 @@
-<!-- Sidebar -->
-<div class="col-lg-2 col-md-3 p-0 sidebar d-none d-md-block border">
+<?php
+use App\models\Usuario;
+
+$uidSidebar = (int) ($_SESSION['user']['id'] ?? 0);
+$mostrarMenuConfiguracoes = $uidSidebar > 0 && Usuario::perfilPorId($uidSidebar) === 'administrador';
+?>
+<!-- Sidebar: coluna flex + painel sticky para não rolar com o conteúdo -->
+<div class="col-lg-2 col-md-3 p-0 d-none d-md-flex flex-column border">
+    <div class="sidebar sidebar-sticky w-100">
     <div class="p-3">
         <h5 class="text-uppercase text-muted small fw-bold">Navegação</h5>
     </div>
@@ -9,32 +16,31 @@
                 <i class="fas fa-home me-2"></i> Dashboard
             </a>
         </li>
+       
         <li class="nav-item">
-            <a class="nav-link" href="/dashboard/processos" disabled>
-                <i class="fas fa-file-alt me-2"></i> Processos
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/dashboard/inscricoes">
+            <a class="nav-link" href="/inscricoes">
                 <i class="fas fa-clipboard-list me-2"></i> Inscrições
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/dashboard/recursos">
+            <a class="nav-link" href="/recursos">
                 <i class="fas fa-file-alt me-2"></i> Recursos
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/dashboard/relatorios" disabled>
+            <a class="nav-link" href="/relatorios" disabled>
                 <i class="fas fa-chart-bar me-2"></i> Relatórios
             </a>
         </li>
+        <?php if ($mostrarMenuConfiguracoes): ?>
         <li class="nav-item">
-            <a class="nav-link" href="/dashboard/configuracoes" disabled>
+            <a class="nav-link" href="/configuracoes">
                 <i class="fas fa-cog me-2"></i> Configurações
             </a>
         </li>
+        <?php endif; ?>
     </ul>
+    </div>
 </div>
 
 <script>

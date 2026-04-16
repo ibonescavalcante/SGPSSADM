@@ -116,8 +116,10 @@ async function carregar_recursos(processo_id, status) {
     await fetch("/api/recursos", {
         method: "POST",
         body: bodyContent,
+        credentials: "same-origin",
         headers: {
             "Accept": "*/*",
+            "X-CSRF-Token": getDashboardCsrfToken(),
         }
     }).then(response => {
         return response.json();

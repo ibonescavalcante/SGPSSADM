@@ -2,11 +2,8 @@
 <!-- Conteúdo Principal -->
 <div class="col-lg-10 col-md-9 ms-sm-auto px-4 py-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4 mb-0"></h2>
-        <button disabled class="btn btn-primary d-flex align-items-center"
-            onclick="window.location.href='/dashboard/processos/novo'">
-            <i class="fas fa-plus me-2"></i> Novo Processo
-        </button>
+      
+       
     </div>
 
     <!-- Cards de Estatísticas -->
@@ -75,7 +72,7 @@
 
     <!-- Processos em Destaque -->
     <div class="row">
-        <div class="col-lg-8 mb-4">
+        <div class="col-lg-12 mb-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Processos em Andamento</h5>
@@ -97,33 +94,11 @@
             </div>
         </div>
 
-        <div class="col-lg-4 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Ações Rápidas</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <button disabled class="btn btn-outline-primary text-start">
-                            <i class="fas fa-plus-circle me-2"></i> Novo Processo Seletivo
-                        </button>
-                        <!--button class="btn btn-outline-primary text-start">
-                            <i class="fas fa-user-plus me-2"></i> Adicionar Candidato
-                        </button>
-                        <button class="btn btn-outline-primary text-start">
-                            <i class="fas fa-file-export me-2"></i> Exportar Relatórios
-                        </button>
-                        <button class="btn btn-outline-primary text-start">
-                            <i class="fas fa-bell me-2"></i> Enviar Notificações
-                        </button-->
-                    </div>
-                </div>
-            </div>
-        </div>
+       
     </div>
 
     <!-- Tabela de Inscrições Recentes -->
-    <div class="card">
+    <!--div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Inscrições Recentes</h5>
             <div>
@@ -154,7 +129,7 @@
                 </table>
             </div>
         </div>
-    </div>
+    </div-->
 </div>
 </div>
 </div>

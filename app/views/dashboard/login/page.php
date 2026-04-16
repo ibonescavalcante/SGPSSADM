@@ -134,7 +134,7 @@
                 <!--div class="brand-logo">
                     <i class="fas fa-file-alt brand-icon"></i>
                 </div-->
-                <h2>SGPS</h2>
+                <h2>SGP</h2>
                 <p class="mb-0">Sistema Gerenciador de Processo</p>
             </div>
 
@@ -151,7 +151,7 @@
                 </div>
                 <?php endif; ?>
 
-                <form id="loginForm2525" method="POST">
+                <form id="loginForm" action="/dashboard/login" method="post" autocomplete="username">
                     <div class="mb-3">
                         <label for="username" class="form-label">Usuário</label>
 
@@ -181,21 +181,19 @@
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="rememberMe">
                         <label class="form-check-label" for="rememberMe">Lembrar-me</label>
-                        <a href="#" class="float-end">Esqueci minha senha</a>
+                        <!--a href="#" class="float-end">Esqueci minha senha</a-->
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 mb-3">
                         <i class="fas fa-sign-in-alt me-2"></i> Entrar
                     </button>
 
-                    <div class="text-center">
-                        <small class="text-muted">Versão 0.0.1</small>
-                    </div>
+                   
                 </form>
             </div>
 
             <div class="login-footer">
-                <p class="mb-0">© 2023 Sistema de Gerenciamento de Processos. Todos os direitos reservados.</p>
+                <p class="mb-0">© 2023 Sistema de Gerenciamento de Processos.</p>
             </div>
         </div>
 
@@ -208,67 +206,50 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const loginForm = document.getElementById('loginForm');
-        const loginAlert = document.getElementById('loginAlert');
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
 
-        // Alternar visibilidade da senha
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' :
-                '<i class="fas fa-eye-slash"></i>';
-        });
-
-        // Simulação de login
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            // Simulação de validação
-            if (username === 'admin' && password === 'admin') {
-                // Login bem-sucedido
-                loginAlert.classList.add('alert-success');
-                loginAlert.classList.remove('alert-danger', 'd-none');
-                document.getElementById('alertMessage').innerHTML =
-                    '<i class="fas fa-check-circle me-2"></i>Login realizado com sucesso!';
-
-                // Redirecionar após 1 segundo
-                setTimeout(function() {
-                    window.location.href = '';
-                }, 1000);
-            } else {
-                // Login falhou
-                loginAlert.classList.add('alert-danger');
-                loginAlert.classList.remove('alert-success', 'd-none');
-                document.getElementById('alertMessage').innerHTML =
-                    '<i class="fas fa-exclamation-circle me-2"></i>Usuário ou senha incorretos.';
-
-                // Limpar campos após erro
-                document.getElementById('password').value = '';
-            }
-        });
-
-        // Verificar se há credenciais salvas
-        const savedUsername = localStorage.getItem('savedUsername');
-        const rememberMe = localStorage.getItem('rememberMe') === 'true';
-
-        if (savedUsername && rememberMe) {
-            document.getElementById('username').value = savedUsername;
-            document.getElementById('rememberMe').checked = true;
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' :
+                    '<i class="fas fa-eye-slash"></i>';
+            });
         }
 
-        //     // Salvar credenciais se "Lembrar-me" estiver marcado
-        document.getElementById('rememberMe').addEventListener('change', function() {
-            if (this.checked) {
-                localStorage.setItem('rememberMe', 'true');
-            } else {
-                localStorage.setItem('rememberMe', 'false');
-                localStorage.removeItem('savedUsername');
-            }
-        });
+        const savedUsername = localStorage.getItem('savedUsername');
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        if (savedUsername && rememberMe) {
+            var u = document.getElementById('username');
+            var r = document.getElementById('rememberMe');
+            if (u) u.value = savedUsername;
+            if (r) r.checked = true;
+        }
+
+        var rememberEl = document.getElementById('rememberMe');
+        if (rememberEl) {
+            rememberEl.addEventListener('change', function() {
+                if (this.checked) {
+                    localStorage.setItem('rememberMe', 'true');
+                } else {
+                    localStorage.setItem('rememberMe', 'false');
+                    localStorage.removeItem('savedUsername');
+                }
+            });
+        }
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', function() {
+                var remember = document.getElementById('rememberMe');
+                if (remember && remember.checked) {
+                    var username = document.getElementById('username');
+                    if (username && username.value) {
+                        localStorage.setItem('savedUsername', username.value);
+                    }
+                }
+            });
+        }
     });
     </script>
 </body>

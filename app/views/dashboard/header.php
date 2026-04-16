@@ -1,4 +1,11 @@
-<?php //var_dump($_SESSION['user']); die; 
+<?php
+//var_dump($_SESSION['user']); die;
+use App\middleware\SessionSecurity;
+
+if (SessionSecurity::estaLogadoDashboard()) {
+    SessionSecurity::ensureDashboardCsrfToken();
+}
+$csrfToken = SessionSecurity::obterTokenCsrfDashboard();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -6,7 +13,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php if ($csrfToken !== null): ?>
+    <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+    <?php endif; ?>
     <title>Sistema PSS - Processos Seletivos</title>
+    <script>
+    function getDashboardCsrfToken() {
+        var m = document.querySelector('meta[name="csrf-token"]');
+        return m ? (m.getAttribute('content') || '') : '';
+    }
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -194,9 +210,20 @@
 
         .sidebar {
             background-color: white;
-            min-height: calc(100vh - 56px);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
 
+        /* Painel da sidebar fixo na viewport (abaixo da navbar fixed), conteúdo principal rola */
+        @media (min-width: 768px) {
+            .sidebar-sticky {
+                position: sticky;
+                top: 70px;
+                align-self: flex-start;
+                height: calc(100vh - 70px);
+                max-height: calc(100vh - 70px);
+                overflow-y: auto;
+                z-index: 1010;
+            }
         }
 
         .sidebar .nav-link {
@@ -453,6 +480,13 @@
                 min-height: auto;
             }
 
+            .sidebar-sticky {
+                position: static;
+                height: auto;
+                max-height: none;
+                overflow-y: visible;
+            }
+
             .step-label {
                 font-size: 0.7rem;
             }
@@ -675,6 +709,11 @@
                 const response = await fetch("/api/alterar-senha", {
                     method: "POST",
                     body: bodyContent,
+                    credentials: "same-origin",
+                    headers: {
+                        "X-CSRF-Token": getDashboardCsrfToken(),
+                        "Accept": "application/json"
+                    }
                 });
 
                 const data = await response.json();

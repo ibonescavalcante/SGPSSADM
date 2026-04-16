@@ -333,8 +333,10 @@
         await fetch("/api/inscricoes", {
             method: "POST",
             body: bodyContent,
+            credentials: "same-origin",
             headers: {
                 "Accept": "*/*",
+                "X-CSRF-Token": getDashboardCsrfToken(),
             }
         }).then(response => {
             return response.json();

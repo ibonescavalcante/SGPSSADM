@@ -2,6 +2,8 @@
 
 namespace App\middleware;
 
+use App\models\UsuarioSessaoDashboard;
+
 class SessionSecurity
 {
     /**
@@ -117,6 +119,104 @@ class SessionSecurity
         }
 
         return true;
+    }
+
+    /**
+     * Sessão do painel administrativo (avaliadores) — chave `user`.
+     */
+    public static function estaLogadoDashboard(): bool
+    {
+        return isset($_SESSION['user']['id']) && is_numeric($_SESSION['user']['id']);
+    }
+
+    /**
+     * Confere se o token de sessão do painel ainda é o registrado no banco (sessão única).
+     * Sem efeito se não houver login no painel.
+     */
+    public static function validarVinculoSessaoDashboard(): bool
+    {
+        if (!self::estaLogadoDashboard()) {
+            return true;
+        }
+
+        $uid = (int) $_SESSION['user']['id'];
+        $sessToken = $_SESSION['user']['dashboard_sessao_token'] ?? null;
+        if (!is_string($sessToken) || strlen($sessToken) !== 64) {
+            return false;
+        }
+
+        try {
+            $dbToken = UsuarioSessaoDashboard::obterTokenPorUsuario($uid);
+        } catch (\Throwable $e) {
+            error_log('validarVinculoSessaoDashboard: ' . $e->getMessage());
+            return false;
+        }
+
+        if ($dbToken === null || !hash_equals($dbToken, $sessToken)) {
+            return false;
+        }
+
+        $now = time();
+        $last = (int) ($_SESSION['_dashboard_sessao_db_touch'] ?? 0);
+        if ($now - $last >= 60) {
+            try {
+                UsuarioSessaoDashboard::tocarUltimoAcesso($uid);
+            } catch (\Throwable $e) {
+                error_log('tocarUltimoAcesso dashboard: ' . $e->getMessage());
+            }
+            $_SESSION['_dashboard_sessao_db_touch'] = $now;
+        }
+
+        return true;
+    }
+
+    /**
+     * Garante token CSRF para requisições do painel (POST / fetch).
+     */
+    public static function ensureDashboardCsrfToken(): void
+    {
+        if (!self::estaLogadoDashboard()) {
+            return;
+        }
+        if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+    }
+
+    /**
+     * Novo token após login (mitiga fixation).
+     */
+    public static function regenerateDashboardCsrfToken(): void
+    {
+        if (!self::estaLogadoDashboard()) {
+            return;
+        }
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    public static function obterTokenCsrfDashboard(): ?string
+    {
+        self::ensureDashboardCsrfToken();
+        $t = $_SESSION['csrf_token'] ?? null;
+        return is_string($t) && $t !== '' ? $t : null;
+    }
+
+    /**
+     * Valida header X-CSRF-Token ou campo POST csrf_token.
+     */
+    public static function validarDashboardCsrf(): bool
+    {
+        if (!self::estaLogadoDashboard()) {
+            return false;
+        }
+        $header = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        $post = $_POST['csrf_token'] ?? '';
+        $fromRequest = is_string($header) && $header !== '' ? $header : (is_string($post) ? $post : '');
+        $stored = $_SESSION['csrf_token'] ?? '';
+        if ($fromRequest === '' || $stored === '' || !is_string($stored)) {
+            return false;
+        }
+        return hash_equals($stored, $fromRequest);
     }
 
     /**

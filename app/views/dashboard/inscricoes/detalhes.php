@@ -360,6 +360,9 @@
 
                                             <form action="/dashboard/inscricoes/pontuacao/excluir" method="post"
                                                 onsubmit="return confirm('Tem certeza que deseja excluir esta pontuação?');">
+                                                <?php if (!empty($_SESSION['csrf_token'])): ?>
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+                                                <?php endif; ?>
                                                 <input type="hidden" name="pontuacao_id" value="<?php echo $item->id; ?>">
                                                 <input type="hidden" name="inscricao_id"
                                                     value="<?php echo $detalhes[0]->id  ?>">
@@ -388,6 +391,9 @@
             </div-->
             <!-- Form for justification and status update -->
             <form action="" method="post" class="p-3 bg-light rounded border">
+                <?php if (!empty($_SESSION['csrf_token'])): ?>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+                <?php endif; ?>
                 <div class="mb-3">
                     <label for="justificativa" class="form-label" style="font-weight: 700;">Justificativa</label>
                     <textarea name="justificativa" id="justificativa" rows="3" class="form-control"
@@ -454,6 +460,9 @@
 
                 <form action="/dashboard/inscricoes/detalhes/pontuacao" method="post"
                     class="p-3 bg-light rounded border" style="width: 100%;">
+                    <?php if (!empty($_SESSION['csrf_token'])): ?>
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+                    <?php endif; ?>
                     <div class="mb-3">
                         <input type="text" id="doc_tipo" name="doc_tipo" class="form-control me-2 mb-1"
                             placeholder="Digite o tipo de documento">
@@ -542,6 +551,11 @@
                 const response = await fetch("/api/avaliacao-titulo", {
                     method: "POST",
                     body: bodyContent,
+                    credentials: "same-origin",
+                    headers: {
+                        "X-CSRF-Token": getDashboardCsrfToken(),
+                        "Accept": "application/json"
+                    }
                 });
 
                 const data = await response.json();
@@ -574,6 +588,9 @@
             </div>
             <div class="modal-body">
                 <form action="/dashboard/inscricoes/documento/alterar" method="post" enctype="multipart/form-data">
+                    <?php if (!empty($_SESSION['csrf_token'])): ?>
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+                    <?php endif; ?>
                     <input type="hidden" name="inscricao_id" value="<?php echo $detalhes[0]->id; ?>">
                     <input type="hidden" id="documento-tipo" name="documento_tipo">
                     <div class="mb-3">

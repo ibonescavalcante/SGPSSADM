@@ -11,60 +11,82 @@ class Router
 
   const CONTROLLER_NAMESPACE = 'App\\controllers';
 
-  // ✅ Rotas públicas (acessíveis sem login)
-  protected static array $rotasPublicas = [
-    '/login',
-    '/',
-    // '/buscarcidades',
-    // '/cadastro',
-    // '/pss/(\d+)',
-    // '/pss/(\d+)/cargo/(\d+)',
-    // '/pss/(\d+)/inscricao',
-    // '/pss/(\d+)/zona/(\w+)',
-    // '/consulta/protocolo',
-    // '/consulta/recurso',
-    '/dashboard/login',
-    '/dashboard/logout',
-    '/dashboard',
-    '/dashboard/processos',
-    '/dashboard/processos/novo',
-    '/dashboard/inscricoes',
-    '/dashboard/relatorios',
-    '/dashboard/configuracoes',
-    '/dashboard/inscricoes/detalhes/(\d+)',
-    '/dashboard/recursos/detalhes/(\d+)',
-    '/dashboard/recursos/detalhes',
-    '/dashboard/inscricoes/detalhes',
-    '/dashboard/inscricoes/detalhes/pontuacao',
-    '/dashboard/inscricoes/pontuacao/excluir',
-    '/verificar-senha',
-    '/inscricao/comprovante/([A-Za-z0-9]+)',
-    '/inscricao/comprovante/([A-Za-z0-9]+)/pdf',
-    '/onboarding/(\d+)/zona',
-    '/onboarding/(\d+)/microrregiao/([a-zA-Z0-9_]+)',
-    '/pss/(\d+)/vagas',
-    '/api/cidades-por-estado/(\d+)',
-    '/api/cargos/(\d+)',
-    '/api/inscricoes',
-    '/api/recursos',
-    '/api/set-inscricoes',
-    '/api/status/(\d+)',
-    '/api/avaliacao-titulo',
-    '/dashboard/relatorios/gerar',
-    '/api/alterar-senha',
-    '/dashboard/recursos',
-  ];
+  private static function appDebug(): bool
+  {
+    $v = $_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG');
+    if ($v === false || $v === null || $v === '') {
+      return false;
+    }
+    return filter_var($v, FILTER_VALIDATE_BOOLEAN);
+  }
+
+  /**
+   * Rotas que não exigem sessão do painel (`$_SESSION['user']`).
+   */
+  private static function dashboardRequerAutenticacao(string $method, string $uri): bool
+  {
+    $publicGet = ['/', '/login', '/dashboard/login', '/dashboard/logout'];
+    if ($method === 'get' && in_array($uri, $publicGet, true)) {
+      return false;
+    }
+    if ($method === 'post' && $uri === '/dashboard/login') {
+      return false;
+    }
+    return true;
+  }
+
+  private static function isApiRequest(string $uri): bool
+  {
+    return str_starts_with($uri, '/api/');
+  }
+
+  private static function responderNaoAutenticado(string $uri): void
+  {
+    if (self::isApiRequest($uri)) {
+      http_response_code(401);
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode(['erro' => 'Não autenticado.']);
+      exit;
+    }
+    header('Location: /dashboard/login');
+    exit;
+  }
+
+  /**
+   * Sessão do painel substituída por outro login (mesma conta).
+   */
+  private static function responderSessaoDashboardSubstituida(string $uri): void
+  {
+    if (self::isApiRequest($uri)) {
+      http_response_code(401);
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode(['erro' => 'Sessão encerrada. A conta foi acessada em outro local.']);
+      exit;
+    }
+    header('Location: /dashboard/login?sessao=substituida');
+    exit;
+  }
+
+  private static function responderCsrfInvalido(string $uri): void
+  {
+    if (self::isApiRequest($uri)) {
+      http_response_code(403);
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode(['erro' => 'Token de segurança inválido ou ausente.']);
+      exit;
+    }
+    $_SESSION['erro'] = 'Sessão de segurança expirada. Atualize a página e tente novamente.';
+    $back = $_SERVER['HTTP_REFERER'] ?? '/dashboard';
+    header('Location: ' . $back);
+    exit;
+  }
 
   public static function load(string $controller, string $method, ...$params)
   {
-    // echo $controller;
     try {
-      //Verifica se o controller existe
       $controllerNamespace = self::CONTROLLER_NAMESPACE . '\\' . $controller;
-      // echo $controllerNamespace;
       if (!class_exists($controllerNamespace)) {
         throw new \Exception("O controller {$controller} não existe");
-        //obs:\Exception utiliza essa contrabarra para que possa buscara o Exception global eo mesmo que usar 'use Exception' no inicio
       }
 
       $controllerInstance = new $controllerNamespace;
@@ -74,25 +96,31 @@ class Router
       }
       $controllerInstance->$method(...$params);
     } catch (\Throwable $th) {
-      echo $th->getMessage();
+      error_log('Router::load ' . $th->getMessage());
+      if (self::appDebug()) {
+        echo $th->getMessage();
+      } else {
+        http_response_code(500);
+        echo 'Erro interno do servidor.';
+      }
     }
   }
+
   public static function routes(): array
   {
     return [
       'get' => [
-        // Rotas dashboard
         '/' => fn() => self::load('LoginDashboardController', 'index'),
         '/login' => fn() => self::load('LoginDashboardController', 'index'),
         '/dashboard' => fn() => self::load('DashboardController', 'index'),
         '/dashboard/processos' => fn() => self::load('DashboardController', 'processos'),
         '/dashboard/processos/novo' => fn() => self::load('DashboardController', 'processos_novo'),
-        '/dashboard/inscricoes' => fn() => self::load('DashboardController', 'inscricoes'),
-        '/dashboard/recursos' => fn() => self::load('DashboardController', 'recursos'),
+        '/inscricoes' => fn() => self::load('DashboardController', 'inscricoes'),
+        '/recursos' => fn() => self::load('DashboardController', 'recursos'),
         '/dashboard/inscricoes/detalhes/(\d+)' => fn($id) => self::load('DashboardController', 'detalhes', $id),
         '/dashboard/recursos/detalhes/(\d+)' => fn($id) => self::load('DashboardController', 'detalhes_recursos', $id),
         '/dashboard/relatorios' => fn() => self::load('DashboardController', 'relatorios'),
-        '/dashboard/configuracoes' => fn() => self::load('DashboardController', 'configuracoes'),
+        '/configuracoes' => fn() => self::load('DashboardController', 'configuracoes'),
         '/dashboard/login' => fn() => self::load('LoginDashboardController', 'index'),
         '/dashboard/logout' => fn() => self::load('LoginDashboardController', 'logout'),
         '/api/cargos/(\d+)' => fn($id) => self::load('ApiController', 'get_cargos_by_pss_id', $id),
@@ -102,19 +130,20 @@ class Router
       ],
       'post' => [
 
-        //rotas do dashboard
         '/dashboard/login' => fn() => self::load('LoginDashboardController', 'logar'),
-        '/api/inscricoes' => fn() => self::load('ApiController', 'get_inscricoes'),
-        '/api/recursos' => fn() => self::load('ApiController', 'get_recursos'),
-        '/api/set-inscricoes' => fn() => self::load('ApiController', 'set_inscricao_status'),
-        '/api/avaliacao-titulo' => fn() => self::load('ApiController', 'setAvaliacaoTitulo'),
         '/dashboard/inscricoes/detalhes/(\d+)' => fn($id) => self::load('ApiController', 'set_inscricao_status', $id),
         '/dashboard/recursos/detalhes/(\d+)' => fn($id) => self::load('ApiController', 'set_recursos_status', $id),
         '/dashboard/inscricoes/detalhes/pontuacao' => fn() => self::load('ApiController', 'set_inscricao_pontuacao'),
         '/dashboard/inscricoes/pontuacao/excluir' => fn() => self::load('ApiController', 'excluirPontuacao'),
         '/dashboard/inscricoes/documento/alterar' => fn() => self::load('ApiController', 'alterarDocumento'),
         '/dashboard/relatorios/api' => fn() => self::load('DashboardController', 'relatorios_api'),
+        '/configuracoes/usuario' => fn() => self::load('DashboardController', 'criar_usuario'),
+        '/configuracoes/usuario/atualizar' => fn() => self::load('DashboardController', 'atualizar_usuario'),
         '/api/alterar-senha' => fn() => self::load('ApiController', 'alterarSenha'),
+        '/api/inscricoes' => fn() => self::load('ApiController', 'get_inscricoes'),
+        '/api/recursos' => fn() => self::load('ApiController', 'get_recursos'),
+        '/api/set-inscricoes' => fn() => self::load('ApiController', 'set_inscricao_status'),
+        '/api/avaliacao-titulo' => fn() => self::load('ApiController', 'setAvaliacaoTitulo'),
 
       ]
     ];
@@ -122,9 +151,6 @@ class Router
 
   public static function execute()
   {
-    // ✅ Usar middleware de segurança para sessões
-    // SessionSecurity::iniciarSessao();
-
     try {
       $routes = self::routes();
       $request = Request::method();
@@ -132,16 +158,10 @@ class Router
       error_log("URI recebida: " . $uri);
       error_log("Método da requisição: " . $request);
 
-
-
-      //trata visualização de documentos 
       if (str_starts_with($uri, '/requisitos/uploads/documentos/') || str_starts_with($uri, '/titulos/uploads/documentos/')) {
         $relativePath = substr($uri, strpos($uri, '/documentos/') + strlen('/documentos/'));
-        // // Define o diretório raiz da aplicação
         $rootDir = realpath(__DIR__ . '/../../');
-        // $filename = basename($uri);
-        // Monta o caminho completo para o arquivo solicitado
-        $filePath = $rootDir . '/uploads/documentos/' . $relativePath; //. $relativePath;
+        $filePath = $rootDir . '/uploads/documentos/' . $relativePath;
         $realFilePath = realpath($filePath);
         $uploadsDir = realpath($rootDir . '/uploads/');
         if ($realFilePath !== false && str_starts_with($realFilePath, $uploadsDir) && is_file($realFilePath)) {
@@ -156,60 +176,33 @@ class Router
         }
       }
 
-      // echo ($uri);
-      // die;
       if (!isset($routes[$request])) {
         error_log("Erro: Método de requisição '" . $request . "' não encontrado nas rotas.");
         throw new \Exception("A rota não existe!");
       }
 
-      // ✅ Se o usuário estiver logado e tentar acessar o /login, redireciona para o painel
-      // if ($uri === '/login' && SessionSecurity::estaLogado()) {
-      //   header("Location: /painel");
-      //   exit;
-      // }
-
-      // ✅ Verifica se precisa estar logado
-      $rotaPublica = false;
-
-      // Verifica rotas públicas exatas e com regex
-      foreach (self::$rotasPublicas as $rotaPublicaPattern) {
-        // Para rotas exatas
-        if ($uri === $rotaPublicaPattern) {
-          $rotaPublica = true;
-          break;
-        }
-
-        // Para rotas com parâmetros regex
-        $pattern = str_replace('(\d+)', '\d+', $rotaPublicaPattern);
-        $pattern = str_replace('([A-Za-z0-9]+)', '[A-Za-z0-9]+', $pattern);
-        $pattern = str_replace('(\w+)', '\w+', $pattern);
-        $pattern = str_replace('([a-zA-Z0-9_]+)', '[a-zA-Z0-9_]+', $pattern);
-        if (preg_match("#^" . $pattern . "$#", $uri)) {
-          $rotaPublica = true;
-          break;
-        }
+      if (self::dashboardRequerAutenticacao($request, $uri) && !SessionSecurity::estaLogadoDashboard()) {
+        self::responderNaoAutenticado($uri);
       }
 
+      if (
+        self::dashboardRequerAutenticacao($request, $uri)
+        && SessionSecurity::estaLogadoDashboard()
+        && !SessionSecurity::validarVinculoSessaoDashboard()
+      ) {
+        SessionSecurity::destruirSessao();
+        self::responderSessaoDashboardSubstituida($uri);
+      }
 
+      if (
+        $request === 'post'
+        && $uri !== '/dashboard/login'
+        && SessionSecurity::estaLogadoDashboard()
+        && !SessionSecurity::validarDashboardCsrf()
+      ) {
+        self::responderCsrfInvalido($uri);
+      }
 
-
-
-
-      // ✅ Verificação de autenticação com middleware de segurança
-      // if (!$rotaPublica && !SessionSecurity::estaLogado()) {
-      //   // Redireciona para o login se não estiver logado ou sessão inválida
-      //   header("Location: /login");
-      //   exit;
-      // }
-
-      // ✅ Verificar integridade da sessão para usuários logados
-      // if (SessionSecurity::estaLogado() && !SessionSecurity::verificarIntegridade()) {
-      //   header("Location: /login");
-      //   exit;
-      // }
-
-      // Try exact match first
       if (array_key_exists($uri, $routes[$request])) {
         error_log("Rota exata encontrada para URI: " . $uri);
         $router = $routes[$request][$uri];
@@ -218,7 +211,6 @@ class Router
         }
       }
 
-      // Then try regex matches for routes with parameters
       foreach ($routes[$request] as $route => $handler) {
         $pattern = preg_replace("/{([a-zA-Z0-9_]+)}/", "([a-zA-Z0-9_]+)", $route);
         $pattern = preg_replace("/\\{(\\w+):(\\w+)\\/}/", "($2)", $pattern);
@@ -239,7 +231,15 @@ class Router
       throw new \Exception("A rota não existe!.");
     } catch (\Throwable $th) {
       error_log("Erro geral no roteador: " . $th->getMessage());
-      echo $th->getMessage();
+      if (self::appDebug()) {
+        echo $th->getMessage();
+        return;
+      }
+      $msg = $th->getMessage();
+      $is404 = str_contains($msg, 'Arquivo não encontrado')
+        || str_contains($msg, 'A rota não existe');
+      http_response_code($is404 ? 404 : 500);
+      echo $is404 ? 'Página não encontrada.' : 'Ocorreu um erro ao processar a solicitação.';
     }
   }
 }

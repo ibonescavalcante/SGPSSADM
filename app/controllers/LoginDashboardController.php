@@ -3,14 +3,23 @@
 namespace App\controllers;
 
 use App\models\Usuario;
+use App\models\UsuarioSessaoDashboard;
 use App\middleware\SessionSecurity;
 
-
+use App\core\Controller;
 class LoginDashboardController extends Controller
 {
     public function index()
     {
-        $this->view('dashboard/login/page');
+        if (SessionSecurity::estaLogadoDashboard()) {
+            header('Location: /dashboard');
+            exit;
+        }
+        $data = [];
+        if (isset($_GET['sessao']) && $_GET['sessao'] === 'substituida') {
+            $data['erro'] = 'Sessão encerrada. Esta conta foi acessada em outro dispositivo ou navegador.';
+        }
+        $this->view('dashboard/login/page', $data);
     }
 
     public function logar()
@@ -36,16 +45,34 @@ class LoginDashboardController extends Controller
                 $confirma_senha = Usuario::autentica_uauario($_POST['username'], $_POST['password']);
 
                 if ($confirma_senha) {
+                    try {
+                        if (session_status() === PHP_SESSION_ACTIVE) {
+                            session_regenerate_id(true);
+                        }
 
-                    $_SESSION['user'] = [
-                        'id' => $confirma_senha['id'],
-                        'nome' => $confirma_senha['nome'],
-                        'username' => $confirma_senha['email'],
-                    ];
+                        $token = bin2hex(random_bytes(32));
+                        UsuarioSessaoDashboard::registrarOuAtualizar((int) $confirma_senha['id'], $token);
 
-                    // Redireciona para dashboard
-                    header('Location: /dashboard');
-                    exit;
+                        $perfilSessao = strtolower(trim((string) ($confirma_senha['perfil'] ?? '')));
+
+                        $_SESSION['user'] = [
+                            'id' => $confirma_senha['id'],
+                            'nome' => $confirma_senha['nome'],
+                            'username' => $confirma_senha['email'],
+                            'perfil' => $perfilSessao,
+                            'dashboard_sessao_token' => $token,
+                        ];
+                        SessionSecurity::regenerateDashboardCsrfToken();
+
+                        header('Location: /dashboard');
+                        exit;
+                    } catch (\Throwable $e) {
+                        error_log('Login dashboard sessão: ' . $e->getMessage());
+                        $this->view('dashboard/login/page', [
+                            'erro' => 'Não foi possível concluir o login. Tente novamente ou contate o suporte.',
+                        ]);
+                        return;
+                    }
                 } else {
                     $this->view('dashboard/login/page', ['erro' => 'Usuário ou senha inválido!']);
                 }
@@ -57,6 +84,13 @@ class LoginDashboardController extends Controller
 
     public function logout()
     {
+        if (SessionSecurity::estaLogadoDashboard() && SessionSecurity::validarVinculoSessaoDashboard()) {
+            try {
+                UsuarioSessaoDashboard::removerPorUsuario((int) $_SESSION['user']['id']);
+            } catch (\Throwable $e) {
+                error_log('Logout remover sessão dashboard: ' . $e->getMessage());
+            }
+        }
         SessionSecurity::destruirSessao();
         header('Location: /dashboard/login');
         exit;

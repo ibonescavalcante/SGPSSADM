@@ -338,7 +338,7 @@ class InscricaoDashboard
         }
     }
     // insere pontuaçõa de titulo
-    public static function set_inscricao_pontuacao_titulo($usuario_id, $inscricao_id, $tipo_documento, $justificativa_pontuacao, $pontos_titulo)
+    public static function set_inscricao_pontuacao_titulo($usuario_id, $inscricao_id, $tipo_documento, $justificativa_pontuacao, $pontos_titulo, bool $apiContext = false)
     {
         $avaliador = self::getAvaliador_Inscricao($inscricao_id);
         //VERIFICA SE O USUARIO LOGADO E O AVALIADOR SÃO IGUAIS
@@ -369,6 +369,9 @@ class InscricaoDashboard
 
             ]);
         } catch (\Throwable $th) {
+            if ($apiContext) {
+                throw $th;
+            }
             $_SESSION['erro'] = $th->getMessage();
             header("Location: /dashboard/inscricoes/detalhes/" . $inscricao_id);
         }

@@ -2,7 +2,6 @@
 
 namespace App\controllers;
 
-use App\models\PssDashboard;
 use App\models\PssCargoDashboard;
 use App\models\InscricaoDashboard;
 use App\models\Usuario;
@@ -12,7 +11,7 @@ use App\models\Usuario;
 // use App\models\Candidato;
 // use App\models\Inscricao;
 // use App\models\Pss;
-
+use App\core\Controller;
 class ApiController extends Controller
 {
 
@@ -125,11 +124,53 @@ class ApiController extends Controller
         }
     }
 
+    /**
+     * Registra pontuação de título via modal (JSON).
+     */
+    public function setAvaliacaoTitulo(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['sucesso' => false, 'erro' => 'Método não permitido.']);
+            return;
+        }
+        $usuario_id = $_SESSION['user']['id'] ?? null;
+        if (!$usuario_id) {
+            http_response_code(401);
+            echo json_encode(['sucesso' => false, 'erro' => 'Não autenticado.']);
+            return;
+        }
+        $inscricao_id = $_POST['inscricao_id'] ?? null;
+        $tipo_documento = $_POST['tipo_documento'] ?? '';
+        $pontos = $_POST['pontos'] ?? null;
+        if ($inscricao_id === null || $inscricao_id === '' || $pontos === null || $pontos === '') {
+            http_response_code(400);
+            echo json_encode(['sucesso' => false, 'erro' => 'Dados incompletos.']);
+            return;
+        }
+        try {
+            InscricaoDashboard::set_inscricao_pontuacao_titulo(
+                (int) $usuario_id,
+                (int) $inscricao_id,
+                (string) $tipo_documento,
+                'Avaliação de título (modal painel)',
+                $pontos,
+                true
+            );
+            echo json_encode(['sucesso' => true, 'mensagem' => 'Pontuação registrada com sucesso.']);
+        } catch (\Throwable $e) {
+            error_log('setAvaliacaoTitulo: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['sucesso' => false, 'erro' => 'Não foi possível salvar a avaliação.']);
+        }
+    }
+
     //setar inscricao status deferido e indeferido
-    public function set_inscricao_status()
+    public function set_inscricao_status($routeInscricaoId = null)
     {
 
-        $usuario_id = $_SESSION['user']['id'] ?? 0;
+        $usuario_id = (int) ($_SESSION['user']['id'] ?? 0);
         // $avaliador_id = $_POST['avaliador_id'] ?? 0;
         $inscricao_id = $_POST['inscricao_id'] ?? null;
         $status    = strtolower($_POST['status']) ?? null;
@@ -154,13 +195,13 @@ class ApiController extends Controller
             echo json_encode(["erro" => "Erro interno: " . $e->getMessage()]);
         }
     }
-    public function set_recursos_status()
+    public function set_recursos_status($routeRecursoId = null)
     {
 
         // var_dump($_POST);
         // die;
 
-        $usuario_id = $_SESSION['user']['id'] ?? 0;
+        $usuario_id = (int) ($_SESSION['user']['id'] ?? 0);
         $avaliador_id = $_POST['avaliador_id'] ?? null;
         $recurso_id = $_POST['recurso_id'] ?? null;
         $status    = strtolower($_POST['status']) ?? null;
@@ -204,7 +245,12 @@ class ApiController extends Controller
         }
 
 
-        $usuario_id = $_SESSION['user']['id'] ?? 1;
+        $usuario_id = (int) ($_SESSION['user']['id'] ?? 0);
+        if ($usuario_id < 1) {
+            http_response_code(401);
+            echo json_encode(["erro" => "Não autenticado."]);
+            return;
+        }
         $inscricao_id = $_POST['inscricao_id'] ?? null;
         $avaliador_id = $_POST['avaliador_id'] ?? 0;
         $tipo_documento = $_POST['doc_tipo'] ?? null;
@@ -283,7 +329,7 @@ class ApiController extends Controller
         // $dados = json_decode(file_get_contents('php://input'), true);
         $senhaAtual = $_POST['senha_atual'] ?? null;
         $novaSenha = $_POST['nova_senha'] ?? null;
-        $usuarioId = $_SESSION['user']['id'] ?? 24;
+        $usuarioId = $_SESSION['user']['id'] ?? null;
         // $usuarioEmail = $_SESSION['user']['email'] ?? null;
         // echo ($usuarioId);
         // echo json_encode(["sucesso" => false, "mensagem" => "Método não permitido. Use POST."]);

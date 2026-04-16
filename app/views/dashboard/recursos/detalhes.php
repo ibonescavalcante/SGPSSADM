@@ -70,6 +70,9 @@
 
             <!-- Formulário de Justificativa e Status -->
             <form action="" method="post" class="p-3 bg-light rounded border">
+                <?php if (!empty($_SESSION['csrf_token'])): ?>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+                <?php endif; ?>
                 <div class="mb-3">
                     <label for="justificativa" class="form-label fw-bold">Justificativa</label>
                     <textarea name="justificativa" id="justificativa" rows="3" class="form-control"
