@@ -5,6 +5,7 @@ namespace App\controllers;
 use App\middleware\SessionSecurity;
 use App\models\PssDashboard;
 use App\models\InscricaoDashboard;
+use App\models\Candidato;
 use App\models\Relatorio;
 use App\models\Usuario;
 
@@ -58,7 +59,24 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $this->view('dashboard/main');
+        $limiteProcessosHome = 10;
+        try {
+            $data = [
+                'total_processos_em_andamento' => PssDashboard::contarPorStatus('em_andamento'),
+                'total_candidatos' => (int) Candidato::contarTotal(),
+                'total_inscricoes_ativas' => InscricaoDashboard::contarInscricoesAtivas(),
+                'processos_em_andamento' => PssDashboard::buscarPorStatus('em_andamento', $limiteProcessosHome),
+            ];
+        } catch (\Throwable $e) {
+            error_log('Dashboard index: ' . $e->getMessage());
+            $data = [
+                'total_processos_em_andamento' => 0,
+                'total_candidatos' => 0,
+                'total_inscricoes_ativas' => 0,
+                'processos_em_andamento' => [],
+            ];
+        }
+        $this->view('dashboard/main', $data);
     }
 
     public function inscricoes()
@@ -268,7 +286,12 @@ class DashboardController extends Controller
         $perfil = isset($input['perfil']) ? strtolower(trim((string) $input['perfil'])) : '';
         $senha = isset($input['senha']) ? (string) $input['senha'] : '';
         $senha2 = isset($input['senha_confirmacao']) ? (string) $input['senha_confirmacao'] : '';
-        $ativo = !isset($input['ativo']) || $input['ativo'] === true || $input['ativo'] === '1' || $input['ativo'] === 'on';
+        if (!array_key_exists('ativo', $input)) {
+            $ativo = true;
+        } else {
+            $av = $input['ativo'];
+            $ativo = $av === true || $av === 1 || $av === '1' || $av === 'on' || $av === 'true';
+        }
 
         if ($nome === '' || mb_strlen($nome) < 2) {
             http_response_code(422);
@@ -324,6 +347,12 @@ class DashboardController extends Controller
             if ($sqlState === '23505' || str_contains($msg, '23505')) {
                 http_response_code(422);
                 echo json_encode(['erro' => Usuario::mensagemErroDuplicacao($e)]);
+                exit;
+            }
+            if ($sqlState === '22P02' || str_contains($msg, 'invalid input value for enum')
+                || str_contains($msg, 'invalid input syntax for type')) {
+                http_response_code(422);
+                echo json_encode(['erro' => 'Valor inválido para um campo na base de dados (ex.: perfil ou formato de dado).']);
                 exit;
             }
             http_response_code(500);

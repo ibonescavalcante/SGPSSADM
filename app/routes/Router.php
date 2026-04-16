@@ -119,13 +119,13 @@ class Router
         '/recursos' => fn() => self::load('DashboardController', 'recursos'),
         '/dashboard/inscricoes/detalhes/(\d+)' => fn($id) => self::load('DashboardController', 'detalhes', $id),
         '/dashboard/recursos/detalhes/(\d+)' => fn($id) => self::load('DashboardController', 'detalhes_recursos', $id),
-        '/dashboard/relatorios' => fn() => self::load('DashboardController', 'relatorios'),
+        '/relatorios' => fn() => self::load('DashboardController', 'relatorios'),
         '/configuracoes' => fn() => self::load('DashboardController', 'configuracoes'),
         '/dashboard/login' => fn() => self::load('LoginDashboardController', 'index'),
         '/dashboard/logout' => fn() => self::load('LoginDashboardController', 'logout'),
         '/api/cargos/(\d+)' => fn($id) => self::load('ApiController', 'get_cargos_by_pss_id', $id),
         '/api/status/(\d+)' => fn($id) => self::load('ApiController', 'get_processo_status', $id),
-        '/dashboard/relatorios/gerar' => fn() => self::load('DashboardController', 'gerarRelatorio'),
+        '/relatorios/gerar' => fn() => self::load('DashboardController', 'gerarRelatorio'),
 
       ],
       'post' => [

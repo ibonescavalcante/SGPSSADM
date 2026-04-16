@@ -153,7 +153,7 @@
                 formato: formato
                 // Adicione outros filtros aqui se necessário, como 'cargo_id', 'status', etc.
             });
-            const url = `/dashboard/relatorios/gerar?${params.toString()}`;
+            const url = `/relatorios/gerar?${params.toString()}`;
             console.log(url);
 
             // Redireciona para a URL de geração, que iniciará o download

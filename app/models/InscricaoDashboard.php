@@ -14,6 +14,14 @@ class InscricaoDashboard
         $this->db = Database::getInstance();
     }
 
+    public static function contarInscricoesAtivas(): int
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT COUNT(*) FROM pss.inscricao WHERE status_inscricao = 'Ativa'");
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
     public function busca_inscricoes_by_processo_id_cargo_id($processo_id, $cargo_id,  $cpf, $status, $limite, $page, $vagaTipo, $nome)
     {
         // echo ($status);

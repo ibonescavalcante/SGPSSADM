@@ -131,10 +131,11 @@ class Usuario
         self::sincronizarSequenciaIdUsuario($db);
 
         $telefoneDb = $telefone === '' ? null : $telefone;
+        $ativoSql = $ativo ? 'TRUE' : 'FALSE';
 
         $stmt = $db->prepare(
             'INSERT INTO pss.usuario (nome, email, telefone, perfil, senha_hash, ativo, criado_em, atualizado_em)
-             VALUES (:nome, :email, :telefone, CAST(:perfil AS pss.perfil_usuario), :senha_hash, :ativo, NOW(), NOW())
+             VALUES (:nome, :email, :telefone, CAST(:perfil AS pss.perfil_usuario), :senha_hash, ' . $ativoSql . ', NOW(), NOW())
              RETURNING id'
         );
         $ok = $stmt->execute([
@@ -143,7 +144,6 @@ class Usuario
             'telefone'   => $telefoneDb,
             'perfil'     => $perfil,
             'senha_hash' => $senhaHash,
-            'ativo'      => $ativo,
         ]);
 
         if (!$ok) {
@@ -243,15 +243,16 @@ class Usuario
 
         $db = Database::getInstance();
         $telefoneDb = $telefone === '' ? null : $telefone;
+        // Coluna ativo é boolean: usar TRUE/FALSE (literais inteiros 0/1 geram SQLSTATE 42804).
+        $ativoSql = $ativo ? 'TRUE' : 'FALSE';
 
         $sql = 'UPDATE pss.usuario SET nome = :nome, email = :email, telefone = :telefone,
-                perfil = CAST(:perfil AS pss.perfil_usuario), ativo = :ativo, atualizado_em = NOW()';
+                perfil = CAST(:perfil AS pss.perfil_usuario), ativo = ' . $ativoSql . ', atualizado_em = NOW()';
         $params = [
             'nome'     => $nome,
             'email'    => $email,
             'telefone' => $telefoneDb,
             'perfil'   => $perfil,
-            'ativo'    => $ativo,
             'id'       => $id,
         ];
 

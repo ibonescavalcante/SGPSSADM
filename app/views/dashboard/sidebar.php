@@ -28,7 +28,7 @@ $mostrarMenuConfiguracoes = $uidSidebar > 0 && Usuario::perfilPorId($uidSidebar)
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/relatorios" disabled>
+            <a class="nav-link" href="/relatorios">
                 <i class="fas fa-chart-bar me-2"></i> Relatórios
             </a>
         </li>

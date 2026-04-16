@@ -482,7 +482,14 @@
         });
 
         // Load filters from session storage on page load
-        // document.addEventListener('DOMContentLoaded', function() {
+        // Query ?processo_id= (ex.: vindo do dashboard) tem prioridade e atualiza o select
+        const urlParams = new URLSearchParams(window.location.search);
+        const processoIdQuery = urlParams.get('processo_id');
+        if (processoIdQuery !== null && processoIdQuery !== '') {
+            sessionStorage.setItem('processo_id', processoIdQuery);
+            sessionStorage.removeItem('cargo_id');
+        }
+
         processo_id = sessionStorage.getItem('processo_id') || 1;
         cargo_id = sessionStorage.getItem('cargo_id') || 1;
         status_insc = sessionStorage.getItem('status') || 'apta';

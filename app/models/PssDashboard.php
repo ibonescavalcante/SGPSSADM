@@ -113,10 +113,18 @@ class PssDashboard
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public static function buscarPorStatus($status)
+    public static function contarPorStatus(string $status): int
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare("
+        $stmt = $db->prepare('SELECT COUNT(*) FROM pss.pss WHERE status_global = :status');
+        $stmt->execute(['status' => $status]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function buscarPorStatus(string $status, ?int $limite = null): array
+    {
+        $db = Database::getInstance();
+        $sql = "
             SELECT 
                 p.*,
                 COUNT(pc.id) as total_vagas,
@@ -128,8 +136,16 @@ class PssDashboard
             WHERE p.status_global = :status
             GROUP BY p.id, p.titulo, p.secretaria, p.ano_exercicio, p.status_global, p.inscricao_ini, p.inscricao_fim, p.publicado_em, p.versao, p.metas_json, p.criado_em, p.atualizado_em, p.descricao
             ORDER BY p.criado_em DESC
-        ");
-        $stmt->execute(['status' => $status]);
+        ";
+        if ($limite !== null) {
+            $sql .= ' LIMIT :limite';
+        }
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+        if ($limite !== null) {
+            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+        }
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
