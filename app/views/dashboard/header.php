@@ -1,11 +1,13 @@
 <?php
 //var_dump($_SESSION['user']); die;
+use App\helpers\Branding;
 use App\middleware\SessionSecurity;
 
 if (SessionSecurity::estaLogadoDashboard()) {
     SessionSecurity::ensureDashboardCsrfToken();
 }
 $csrfToken = SessionSecurity::obterTokenCsrfDashboard();
+$branding = Branding::get();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -16,7 +18,7 @@ $csrfToken = SessionSecurity::obterTokenCsrfDashboard();
     <?php if ($csrfToken !== null): ?>
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
     <?php endif; ?>
-    <title>Sistema PSS - Processos Seletivos</title>
+    <title><?= htmlspecialchars($branding['titulo_documento'], ENT_QUOTES, 'UTF-8') ?></title>
     <script>
     function getDashboardCsrfToken() {
         var m = document.querySelector('meta[name="csrf-token"]');
@@ -513,10 +515,10 @@ $csrfToken = SessionSecurity::obterTokenCsrfDashboard();
         <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">
-                    <i class="fas fa-file-alt brand-icon"></i>
+                    <i class="<?= htmlspecialchars($branding['icone_classes'], ENT_QUOTES, 'UTF-8') ?> brand-icon" aria-hidden="true"></i>
                     <div class="brand-text">
-                        <span class="brand-title">SGPS</span>
-                        <span class="brand-subtitle">Sistema de Gestão de Processos Seletivos</span>
+                        <span class="brand-title"><?= htmlspecialchars($branding['nome_curto'], ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="brand-subtitle"><?= htmlspecialchars($branding['subtitulo'], ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                 </a>
 

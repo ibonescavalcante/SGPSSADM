@@ -8,6 +8,7 @@ use App\models\InscricaoDashboard;
 use App\models\Candidato;
 use App\models\Relatorio;
 use App\models\Usuario;
+use App\models\TipoDocumento;
 
 use App\core\Controller;
 
@@ -403,7 +404,23 @@ class DashboardController extends Controller
         // die;
         // echo ("<pre>");
 
-        $this->view('dashboard/inscricoes/detalhes', ['detalhes' => $Detalhe, 'pontuacao' => $pontuacao, 'avaliador' => $avaliador]);
+        $extraDecodificado = [];
+        if (!empty($Detalhe[0]->extra_json)) {
+            $tmp = json_decode((string) $Detalhe[0]->extra_json, true);
+            $extraDecodificado = is_array($tmp) ? $tmp : [];
+        }
+        $documentosExtra = isset($extraDecodificado['documentos']) && is_array($extraDecodificado['documentos'])
+            ? $extraDecodificado['documentos']
+            : [];
+
+        $this->view('dashboard/inscricoes/detalhes', [
+            'detalhes' => $Detalhe,
+            'pontuacao' => $pontuacao,
+            'avaliador' => $avaliador,
+            'tipos_documento' => TipoDocumento::listarParaDetalheInscricao(),
+            'extra_json_inscricao' => $extraDecodificado,
+            'documentos_extra' => $documentosExtra,
+        ]);
     }
     public function detalhes_recursos($id_recurso)
     {
