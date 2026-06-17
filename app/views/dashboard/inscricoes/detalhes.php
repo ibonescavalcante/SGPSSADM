@@ -44,16 +44,18 @@
                                                 echo ($pcd); ?></p>
 
                     <?php
-
-                    $laudo = $extra_json['laudo_pcd'] ?? null;
-                    if (is_array($laudo)) {
-                        foreach ($laudo as $item) {
-                            echo '<p><a href="/requisitos' . htmlspecialchars(str_replace("/var/www/", "/", $item)) . '" 
-                                data-bs-toggle="modal" data-bs-target="#pdfModalTitulo">Ladudo pcd</a></p>';
+                    if (\App\helpers\BrandingDocumentos::registrado('laudo_pcd')) {
+                        $laudo = $extra_json['laudo_pcd'] ?? null;
+                        $modalLaudo = \App\helpers\BrandingDocumentos::ehTitulo('laudo_pcd') ? '#pdfModalTitulo' : '#pdfModal';
+                        if (is_array($laudo)) {
+                            foreach ($laudo as $item) {
+                                echo '<p><a href="/requisitos' . htmlspecialchars(str_replace("/var/www/", "/", $item)) . '" 
+                                data-bs-toggle="modal" data-bs-target="' . htmlspecialchars($modalLaudo, ENT_QUOTES, 'UTF-8') . '">Laudo PCD</a></p>';
+                            }
+                        } elseif (!empty($laudo)) {
+                            echo '<p><a href="/requisitos' . htmlspecialchars(str_replace("/var/www/", "/", $laudo)) . '" 
+                                data-bs-toggle="modal" data-bs-target="' . htmlspecialchars($modalLaudo, ENT_QUOTES, 'UTF-8') . '">Laudo PCD</a></p>';
                         }
-                    } elseif (!empty($laudo)) {
-                        echo '<p><a href="/requisitos' . htmlspecialchars(str_replace("/var/www/", "/", $laudo)) . '" 
-                                data-bs-toggle="modal" data-bs-target="#pdfModalTitulo">Ladudo pcd</a></p>';
                     }
                     ?>
                 </div>
@@ -80,11 +82,64 @@
             ?>
             <!-- Anexos -->
             <div class="row mb-4">
+                <?php
+                if (!function_exists('renderDocumentoInscricaoDetalhe')) {
+                    function renderRequisitoLinkPadrao($docs, $label)
+                    {
+                        if (empty($docs)) {
+                            return;
+                        }
+                        if (!is_array($docs)) {
+                            $docs = [$docs];
+                        }
+                        foreach ($docs as $item) {
+                            echo '<p><a href="/requisitos' . htmlspecialchars($item) . '" 
+                            data-bs-toggle="modal" data-bs-target="#pdfModal">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</a>';
+                            if ($_SESSION['user']['nome'] == 'Administrador') : ?>
+                                <button class="btn btn-sm btn-outline-primary ms-2"
+                                    onclick="alterarArquivo('<?php echo htmlspecialchars($item); ?>')">Alterar</button>
+                            <?php endif;
+                            echo '</p>';
+                        }
+                    }
+
+                    function renderDocumentoInscricaoDetalhe($docs, $label, $baseUrl = '/requisitos', $tipo = null)
+                    {
+                        if (empty($docs)) {
+                            return;
+                        }
+
+                        if (!is_array($docs)) {
+                            $docs = [$docs];
+                        }
+
+                        foreach ($docs as $item) {
+                            ?>
+                            <p>
+                                <a href="<?php echo $baseUrl . htmlspecialchars($item); ?>"
+                                data-bs-toggle="modal"
+                                data-bs-target="#pdfModalTitulo"
+                                <?php echo $tipo ? 'data-tipo-documento="' . htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') . '"' : ''; ?>>
+                                <?php echo $label; ?>
+                                </a>
+
+                                <?php if ($_SESSION['user']['nome'] == 'Administrador') : ?>
+                                    <button class="btn btn-sm btn-outline-primary ms-2"
+                                        onclick="alterarArquivo('<?php echo htmlspecialchars($item); ?>')">
+                                        Alterar
+                                    </button>
+                                <?php endif; ?>
+                            </p>
+                            <?php
+                        }
+                    }
+                }
+                ?>
                 <div class="col-md-6">
                     <h5 class="mb-2"><i class="fas fa-clipboard-list me-2"></i>Requisitos</h5>
                     <?php
                     //
-                    if (!empty($extra_json['documentos']['documento_identidade'])) : ?>
+                    if (\App\helpers\BrandingDocumentos::ehRequisito('documento_identidade') && !empty($extra_json['documentos']['documento_identidade'])) : ?>
                         <p><a href="/requisitos<?php echo htmlspecialchars($extra_json['documentos']['documento_identidade']); ?>"
                                 data-bs-toggle="modal" data-bs-target="#pdfModal">Documento de Identidade</a>
                             <?php
@@ -101,10 +156,10 @@
 
                     $CUR_HABLITACAO_OPERACIONAL = $extra_json['documentos']['CUR_HABLITACAO_OPERACIONAL'] ?? null;
 
-                    if (is_array($CUR_HABLITACAO_OPERACIONAL)) {
+                    if (\App\helpers\BrandingDocumentos::ehRequisito('CUR_HABLITACAO_OPERACIONAL') && is_array($CUR_HABLITACAO_OPERACIONAL)) {
                         foreach ($CUR_HABLITACAO_OPERACIONAL as $item) {
                             echo '<p><a href="/requisitos' . htmlspecialchars($item) . '" 
-                            data-bs-toggle="modal" data-bs-target="#pdfModal">Curso de habilitação proficional</a>';
+                            data-bs-toggle="modal" data-bs-target="#pdfModal">Curso de habilitação profissional</a>';
 
                             if ($_SESSION['user']['nome'] == 'Administrador') : ?>
                                 <button class="btn btn-sm btn-outline-primary ms-2"
@@ -112,9 +167,9 @@
                             <?php endif;
                             echo '</p>';
                         }
-                    } elseif (!empty($CUR_HABLITACAO_OPERACIONAL)) {
+                    } elseif (\App\helpers\BrandingDocumentos::ehRequisito('CUR_HABLITACAO_OPERACIONAL') && !empty($CUR_HABLITACAO_OPERACIONAL)) {
                         echo '<p><a href="/requisitos' . htmlspecialchars($CUR_HABLITACAO_OPERACIONAL) . '" 
-                            data-bs-toggle="modal" data-bs-target="#pdfModal">Curso de habilitação proficional</a>';
+                            data-bs-toggle="modal" data-bs-target="#pdfModal">Curso de habilitação profissional</a>';
                         if ($_SESSION['user']['nome'] == 'Administrador') : ?>
                             <button class="btn btn-sm btn-outline-primary ms-2"
                                 onclick="alterarArquivo('<?php echo htmlspecialchars($CUR_HABLITACAO_OPERACIONAL); ?>')">Alterar</button>
@@ -126,9 +181,12 @@
                     $CNH = null;
                     $possiveis_cnh = ['CNH_B_EAR', 'CNH_C_EAR', 'CNH_D_EAR', 'CNH_E_EAR', 'CNH_D_E_EAR', 'CNH_C_D_E_EAR'];
                     foreach ($possiveis_cnh as $campo) {
+                        if (!\App\helpers\BrandingDocumentos::ehRequisito($campo)) {
+                            continue;
+                        }
                         if (!empty($extra_json['documentos'][$campo])) {
                             $CNH = $extra_json['documentos'][$campo];
-                            break; // achou o primeiro, sai do loop
+                            break;
                         }
                     }
                     if (is_array($CNH)) {
@@ -156,7 +214,7 @@
 
                     $comprovante = $extra_json['documentos']['comprovante_escolaridade'] ?? null;
 
-                    if (is_array($comprovante)) {
+                    if (\App\helpers\BrandingDocumentos::ehRequisito('comprovante_escolaridade') && is_array($comprovante)) {
                         foreach ($comprovante as $item) {
                             echo '<p><a href="/requisitos' . htmlspecialchars($item) . '" 
                             data-bs-toggle="modal" data-bs-target="#pdfModal">Comprovante de Escolaridade</a>';
@@ -166,7 +224,7 @@
                             <?php endif;
                             echo '</p>';
                         }
-                    } elseif (!empty($comprovante)) {
+                    } elseif (\App\helpers\BrandingDocumentos::ehRequisito('comprovante_escolaridade') && !empty($comprovante)) {
                         echo '<p><a href="/requisitos' . htmlspecialchars($comprovante) . '" 
                             data-bs-toggle="modal" data-bs-target="#pdfModal">Comprovante de Escolaridade</a>';
                         if ($_SESSION['user']['nome'] == 'Administrador') : ?>
@@ -178,7 +236,7 @@
 
                     $COMP_ESCOLARIDADE = $extra_json['documentos']['COMP_ESCOLARIDADE'] ?? null;
 
-                    if (is_array($COMP_ESCOLARIDADE)) {
+                    if (\App\helpers\BrandingDocumentos::ehRequisito('COMP_ESCOLARIDADE') && is_array($COMP_ESCOLARIDADE)) {
                         foreach ($COMP_ESCOLARIDADE as $item) {
                             echo '<p><a href="/requisitos' . htmlspecialchars($item) . '" 
                             data-bs-toggle="modal" data-bs-target="#pdfModal">Comprovante de Escolaridade</a>';
@@ -188,7 +246,7 @@
                             <?php endif;
                             echo '</p>';
                         }
-                    } elseif (!empty($COMP_ESCOLARIDADE)) {
+                    } elseif (\App\helpers\BrandingDocumentos::ehRequisito('COMP_ESCOLARIDADE') && !empty($COMP_ESCOLARIDADE)) {
                         echo '<p><a href="/requisitos' . htmlspecialchars($COMP_ESCOLARIDADE) . '" 
                             data-bs-toggle="modal" data-bs-target="#pdfModal">Comprovante de Escolaridade</a>';
                         if ($_SESSION['user']['nome'] == 'Administrador') : ?>
@@ -202,7 +260,7 @@
 
                     $CURSO_CONDUTOR_EMERGENCIA = $extra_json['documentos']['CURSO_CONDUTOR_EMERGENCIA'] ?? null;
 
-                    if (is_array($CURSO_CONDUTOR_EMERGENCIA)) {
+                    if (\App\helpers\BrandingDocumentos::ehRequisito('CURSO_CONDUTOR_EMERGENCIA') && is_array($CURSO_CONDUTOR_EMERGENCIA)) {
                         foreach ($CURSO_CONDUTOR_EMERGENCIA as $item) {
                             echo '<p><a href="/requisitos' . htmlspecialchars($item) . '" 
                             data-bs-toggle="modal" data-bs-target="#pdfModal">CURSO_CONDUTOR_EMERGENCIA</a>';
@@ -212,7 +270,7 @@
                             <?php endif;
                             echo '</p>';
                         }
-                    } elseif (!empty($CURSO_CONDUTOR_EMERGENCIA)) {
+                    } elseif (\App\helpers\BrandingDocumentos::ehRequisito('CURSO_CONDUTOR_EMERGENCIA') && !empty($CURSO_CONDUTOR_EMERGENCIA)) {
                         echo '<p><a href="/requisitos' . htmlspecialchars($CURSO_CONDUTOR_EMERGENCIA) . '" 
                             data-bs-toggle="modal" data-bs-target="#pdfModal">CURSO_CONDUTOR_EMERGENCIA</a>';
                         if ($_SESSION['user']['nome'] == 'Administrador') : ?>
@@ -226,7 +284,7 @@
                     <?php
                     $CUR_SUPERIOR = $extra_json['documentos']['CUR_SUPERIOR'] ?? null;
 
-                    if (is_array($CUR_SUPERIOR)) {
+                    if (\App\helpers\BrandingDocumentos::ehRequisito('CUR_SUPERIOR') && is_array($CUR_SUPERIOR)) {
                         foreach ($CUR_SUPERIOR as $item) {
                             echo '<p><a href="/requisitos' . htmlspecialchars($item) . '" 
                             data-bs-toggle="modal" data-bs-target="#pdfModal">CUR_SUPERIOR</a>';
@@ -236,7 +294,7 @@
                             <?php endif;
                             echo '</p>';
                         }
-                    } elseif (!empty($CUR_SUPERIOR)) {
+                    } elseif (\App\helpers\BrandingDocumentos::ehRequisito('CUR_SUPERIOR') && !empty($CUR_SUPERIOR)) {
                         echo '<p><a href="/requisitos' . htmlspecialchars($CUR_SUPERIOR) . '" 
                             data-bs-toggle="modal" data-bs-target="#pdfModal">CUR_SUPERIOR</a>';
                         if ($_SESSION['user']['nome'] == 'Administrador') : ?>
@@ -250,24 +308,55 @@
                     <?php
                     $REGIS_CONS_CLASSE = $extra_json['documentos']['REGIS_CONS_CLASSE'] ?? null;
 
-                    if (is_array($REGIS_CONS_CLASSE)) {
+                    if (\App\helpers\BrandingDocumentos::ehRequisito('REGIS_CONS_CLASSE') && is_array($REGIS_CONS_CLASSE)) {
                         foreach ($REGIS_CONS_CLASSE as $item) {
                             echo '<p><a href="/requisitos' . htmlspecialchars($item) . '" 
-                            data-bs-toggle="modal" data-bs-target="#pdfModal">REGIS_CONS_CLASSE</a>';
+                            data-bs-toggle="modal" data-bs-target="#pdfModal">Registro / conselho de classe</a>';
                             if ($_SESSION['user']['nome'] == 'Administrador') : ?>
                                 <button class="btn btn-sm btn-outline-primary ms-2"
                                     onclick="alterarArquivo('<?php echo htmlspecialchars($item); ?>')">Alterar</button>
                             <?php endif;
                             echo '</p>';
                         }
-                    } elseif (!empty($REGIS_CONS_CLASSE)) {
+                    } elseif (\App\helpers\BrandingDocumentos::ehRequisito('REGIS_CONS_CLASSE') && !empty($REGIS_CONS_CLASSE)) {
                         echo '<p><a href="/requisitos' . htmlspecialchars($REGIS_CONS_CLASSE) . '" 
-                            data-bs-toggle="modal" data-bs-target="#pdfModal">CURSO_CONDUTOR_EMERGENCIA</a>';
+                            data-bs-toggle="modal" data-bs-target="#pdfModal">Registro / conselho de classe</a>';
                         if ($_SESSION['user']['nome'] == 'Administrador') : ?>
                             <button class="btn btn-sm btn-outline-primary ms-2"
                                 onclick="alterarArquivo('<?php echo htmlspecialchars($REGIS_CONS_CLASSE); ?>')">Alterar</button>
                     <?php endif;
                         echo '</p>';
+                    }
+
+                    $chavesReqComBlocoProprio = [
+                        'documento_identidade',
+                        'CUR_HABLITACAO_OPERACIONAL',
+                        'comprovante_escolaridade',
+                        'COMP_ESCOLARIDADE',
+                        'CURSO_CONDUTOR_EMERGENCIA',
+                        'CUR_SUPERIOR',
+                        'REGIS_CONS_CLASSE',
+                        'CNH_B_EAR',
+                        'CNH_C_EAR',
+                        'CNH_D_EAR',
+                        'CNH_E_EAR',
+                        'CNH_D_E_EAR',
+                        'CNH_C_D_E_EAR',
+                    ];
+                    $docsExtra = $extra_json['documentos'] ?? [];
+                    foreach (\App\helpers\BrandingDocumentos::nomesPorTipo('requisito') as $nomeReq) {
+                        if (in_array($nomeReq, $chavesReqComBlocoProprio, true)) {
+                            continue;
+                        }
+                        $docsGen = $docsExtra[$nomeReq] ?? null;
+                        if (empty($docsGen)) {
+                            continue;
+                        }
+                        $rotulosReqGenerico = [
+                            'certificados' => 'Certificados',
+                        ];
+                        $rotuloGen = $rotulosReqGenerico[$nomeReq] ?? str_replace('_', ' ', $nomeReq);
+                        renderRequisitoLinkPadrao($docsGen, $rotuloGen);
                     }
 
                     ?>
@@ -280,45 +369,32 @@
                     <h5 class="mb-2"><i class="fas fa-file-alt me-2"></i>Títulos </h5>
 
 
-                    <?php 
-
-
-                            function renderDocumento($docs, $label, $baseUrl = '/requisitos', $tipo = null)
-                            {
-                                if (empty($docs)) return;
-
-                                // garante que sempre será array
-                                if (!is_array($docs)) {
-                                    $docs = [$docs];
-                                }
-
-                                foreach ($docs as $item) {
-                                    ?>
-                                    <p>
-                                        <a href="<?php echo $baseUrl . htmlspecialchars($item); ?>"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#pdfModalTitulo"
-                                        <?php echo $tipo ? 'data-tipo-documento="'.$tipo.'"' : ''; ?>>
-                                        <?php echo $label; ?>
-                                        </a>
-
-                                        <?php if ($_SESSION['user']['nome'] == 'Administrador') : ?>
-                                            <button class="btn btn-sm btn-outline-primary ms-2"
-                                                onclick="alterarArquivo('<?php echo htmlspecialchars($item); ?>')">
-                                                Alterar
-                                            </button>
-                                        <?php endif; ?>
-                                    </p>
-                                    <?php
-                                }
-                            }
-                    
-                    renderDocumento($extra_json['documentos']['comprovante_experiencia_declaracoes'] ?? null, 'Declaração de Experiência', '/titulos', 'Experiencia');
-                    renderDocumento($extra_json['documentos']['comprovante_escolaridade'] ?? null, 'Comprovante de Escolaridade');
-                    renderDocumento($extra_json['documentos']['certificados'] ?? null, 'Certificados', '/titulos', 'Certificado');
-                    renderDocumento($extra_json['documentos']['POS_GRADUACAO_LATU_SENSU'] ?? null, 'Pós-Graduação Lato Sensu', '/titulos', 'Posgraduacao');
-                    renderDocumento($extra_json['documentos']['CUR_EXTENSAO'] ?? null, 'Curso de Extensão', '/titulos', 'Extensao');
-       
+                    <?php
+                    $metaTituloDetalhe = [
+                        'documento_identidade' => ['Documento de Identidade', 'Identidade'],
+                        'comprovante_escolaridade' => ['Comprovante de Escolaridade', null],
+                        'comprovante_experiencia_declaracoes' => ['Declaração de Experiência', 'Experiencia'],
+                        'certificados' => ['Certificados', 'Certificado'],
+                        'POS_GRADUACAO_LATU_SENSU' => ['Pós-Graduação Lato Sensu', 'Posgraduacao'],
+                        'POS_GRADUACAO_STRICTO_SENSU' => ['Pós-Graduação Stricto Sensu', 'PosgraduacaoStricto'],
+                        'CUR_EXTENSAO' => ['Curso de Extensão', 'Extensao'],
+                    ];
+                    foreach (\App\helpers\BrandingDocumentos::nomesPorTipo('titulo') as $nomeTit) {
+                        if ($nomeTit === 'laudo_pcd') {
+                            continue;
+                        }
+                        $docsTit = $extra_json['documentos'][$nomeTit] ?? null;
+                        if (isset($metaTituloDetalhe[$nomeTit])) {
+                            [$lb, $dt] = $metaTituloDetalhe[$nomeTit];
+                        } elseif (strpos($nomeTit, 'CNH_') === 0) {
+                            $lb = 'CNH';
+                            $dt = 'CNH';
+                        } else {
+                            $lb = str_replace('_', ' ', $nomeTit);
+                            $dt = null;
+                        }
+                        renderDocumentoInscricaoDetalhe($docsTit, $lb, '/titulos', $dt);
+                    }
                     ?>
 
 

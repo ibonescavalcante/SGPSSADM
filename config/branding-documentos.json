@@ -1,11 +1,55 @@
 [
-{
-  "nome": "POS_GRADUACAO_LATU_SENSU",
-  "tipo_documento": "titulo"
-},
-{
-  "nome": "documento_identidade",
-  "tipo_documento": "titulo"
-}
+  {
+    "nome": "documento_identidade",
+    "tipo_documento": "requisito"
+  },
+  {
+    "nome": "comprovante_escolaridade",
+    "tipo_documento": "requisito"
+  },
+  {
+    "nome": "POS_GRADUACAO_LATU_SENSU",
+    "tipo_documento": "titulo"
+  },
+  {
+    "nome": "POS_GRADUACAO_STRICTO_SENSU",
+    "tipo_documento": "titulo"
+  },
+  {
+    "nome": "certificados",
+    "tipo_documento": "requisito"
+  },
+  {
+    "nome": "laudo_pcd",
+    "tipo_documento": "requisito"
+  },
+    {
+    "nome": "comprovante_ppp",
+    "tipo_documento": "requisito"
+  },
+  {
+    "nome": "declaracao_matricula",
+    "tipo_documento": "requisito"
+  },
 
+  {
+    "nome": "titulo_capacitacao_1",
+    "tipo_documento": "requisito"
+  },
+  {
+    "nome": "titulo_capacitacao_2",
+    "tipo_documento": "requisito"
+  },
+  {
+    "nome": "titulo_capacitacao_3",
+    "tipo_documento": "requisito"
+  },
+  {
+    "nome": "titulo_capacitacao_4",
+    "tipo_documento": "requisito"
+  },
+  {
+    "nome": "titulo_capacitacao_5",
+    "tipo_documento": "requisito"
+  }
 ]
