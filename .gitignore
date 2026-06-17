@@ -1,5 +1,5 @@
 .env
-app/core/Database.php
+#app/core/Database.php
 # ========================
 # Arquivos de configuração locais
 # ========================
