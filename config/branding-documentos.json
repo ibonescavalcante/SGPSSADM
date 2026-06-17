@@ -51,5 +51,9 @@
   {
     "nome": "titulo_capacitacao_5",
     "tipo_documento": "titulo"
+  },
+    {
+    "nome": "PLANO_TRABALHO",
+    "tipo_documento": "titulo"
   }
 ]
