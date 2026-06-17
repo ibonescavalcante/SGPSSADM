@@ -102,6 +102,7 @@ class Router
       } else {
         http_response_code(500);
         echo 'Erro interno do servidor.';
+          echo $th->getMessage();
       }
     }
   }
