@@ -34,22 +34,22 @@
 
   {
     "nome": "titulo_capacitacao_1",
-    "tipo_documento": "requisito"
+    "tipo_documento": "titulo"
   },
   {
     "nome": "titulo_capacitacao_2",
-    "tipo_documento": "requisito"
+    "tipo_documento": "titulo"
   },
   {
     "nome": "titulo_capacitacao_3",
-    "tipo_documento": "requisito"
+    "tipo_documento": "titulo"
   },
   {
     "nome": "titulo_capacitacao_4",
-    "tipo_documento": "requisito"
+    "tipo_documento": "titulos"
   },
   {
     "nome": "titulo_capacitacao_5",
-    "tipo_documento": "requisito"
+    "tipo_documento": "titulo"
   }
 ]
